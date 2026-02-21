@@ -1,0 +1,15 @@
+xgboost
+scikit-learn
+pandas
+fastapi
+uvicorn
+shap
+dice-ml
+mlflow
+streamlit
+evidently
+pytest
+pydantic
+requests
+python-multipart
+httpx

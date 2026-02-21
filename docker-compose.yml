@@ -1,0 +1,48 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ml
+      POSTGRES_PASSWORD: mlpass
+      POSTGRES_DB: studentdb
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  mlflow:
+    image: mlflow/mlflow:latest
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlflow/mlruns
+
+  api:
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile.api
+    depends_on:
+      - mlflow
+      - postgres
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://ml:mlpass@postgres/studentdb
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+
+  streamlit:
+    image: python:3.11-slim
+    volumes:
+      - ./src/app:/app
+    working_dir: /app
+    command: streamlit run dashboard/streamlit_app.py --server.port 8501 --server.enableCORS false
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8000/api/v1
+
+volumes:
+  pg_data:
